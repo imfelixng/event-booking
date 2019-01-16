@@ -2,10 +2,12 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const graphqlHttp = require('express-graphql');
 const { buildSchema } = require('graphql');
+const mongoose = require('mongoose');
+
+const Event = require('./models/event');
 
 const app = express();
 
-const events = [];
 
 app.use(bodyParser.json());
 
@@ -31,7 +33,7 @@ app.use('/graphql', graphqlHttp({
     }
 
     type RootMutation {
-      createEvent(eventInput: EventInput): Event
+      createEvent(eventInput: EventInput!): Event
     }
 
     schema {
@@ -40,19 +42,48 @@ app.use('/graphql', graphqlHttp({
     }
   `),
   rootValue: {
-    events: () => events,
-    createEvent: (args) => {
-      const event = {
-        _id: new Date().getTime(),
+    events: async () => {
+      let events = [];
+      try {
+        events = await Event.find();
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.log(err);
+        throw err;
+      }
+      return events;
+    },
+    createEvent: async (args) => {
+      const event = new Event({
         ...args.eventInput,
-      };
-      // eslint-disable-next-line no-console
-      events.push(event);
-      return event;
+        date: new Date(args.eventInput.date),
+      });
+      let eventSaved = null;
+      try {
+        eventSaved = await event.save();
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.log(err);
+        throw err;
+      }
+      return eventSaved;
     },
   },
   graphiql: true,
 }));
+
+mongoose.connect('mongodb://localhost:27017/event-booking-db',
+  {
+    useNewUrlParser: true,
+    useFindAndModify: false,
+  })
+  .then(() => {
+    // eslint-disable-next-line no-console
+    console.log('Connected mongodb success');
+  })
+  // eslint-disable-next-line no-console
+  .catch(err => console.log(err));
+
 app.listen(3000, () => {
   // eslint-disable-next-line no-console
   console.log('Server is running at port 3000');
