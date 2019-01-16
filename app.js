@@ -3,8 +3,10 @@ const bodyParser = require('body-parser');
 const graphqlHttp = require('express-graphql');
 const { buildSchema } = require('graphql');
 const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
 
 const Event = require('./models/event');
+const User = require('./models/user');
 
 const app = express();
 
@@ -21,11 +23,22 @@ app.use('/graphql', graphqlHttp({
       date: String!
     }
 
+    type User {
+      _id: ID!
+      email: String!
+      password: String!
+    }
+
     input EventInput {
       title: String!
       description: String!
       price: Float!
       date: String!
+    }
+
+    input UserInput {
+      email: String!,
+      password: String!,
     }
 
     type RootQuery {
@@ -34,6 +47,7 @@ app.use('/graphql', graphqlHttp({
 
     type RootMutation {
       createEvent(eventInput: EventInput!): Event
+      createUser(userInput: UserInput!): User
     }
 
     schema {
@@ -57,16 +71,79 @@ app.use('/graphql', graphqlHttp({
       const event = new Event({
         ...args.eventInput,
         date: new Date(args.eventInput.date),
+        creator: '5c3f7b7bbf8d1d815c0b6cf2',
       });
-      let eventSaved = null;
+      let eventCreated = null;
       try {
-        eventSaved = await event.save();
+        eventCreated = await event.save();
       } catch (err) {
         // eslint-disable-next-line no-console
         console.log(err);
         throw err;
       }
-      return eventSaved;
+      let user = null;
+      try {
+        user = await User.findById('5c3f7b7bbf8d1d815c0b6cf2');
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.log(err);
+        throw err;
+      }
+      if (!user) {
+        throw new Error('User not found.');
+      }
+      user.createdEvents.push(eventCreated);
+      let userUpdated = null;
+      try {
+        userUpdated = await user.save();
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.log(err);
+        throw err;
+      }
+      if (!userUpdated) {
+        throw new Error('Event can\'t created.');
+      }
+      return eventCreated;
+    },
+    createUser: async (args) => {
+      let userExisted = null;
+      try {
+        userExisted = await User.findOne({ email: args.userInput.email });
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.log(err);
+        throw err;
+      }
+      if (userExisted) {
+        throw new Error('User exists already.');
+      }
+
+      let hashedPassword = null;
+      try {
+        hashedPassword = await bcrypt.hash(args.userInput.password, 12);
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.log(err);
+        throw err;
+      }
+      const user = new User({
+        email: args.userInput.email,
+        password: hashedPassword,
+      });
+      let userCreated = null;
+      try {
+        userCreated = await user.save();
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.log(err);
+        throw err;
+      }
+      return {
+        _id: userCreated.id,
+        email: userCreated.email,
+        password: 'null',
+      };
     },
   },
   graphiql: true,
