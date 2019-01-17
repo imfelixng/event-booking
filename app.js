@@ -8,8 +8,9 @@ const bcrypt = require('bcryptjs');
 const Event = require('./models/event');
 const User = require('./models/user');
 
-const app = express();
+const ValidateEventInput = require('./validate/event');
 
+const app = express();
 
 app.use(bodyParser.json());
 
@@ -68,6 +69,11 @@ app.use('/graphql', graphqlHttp({
       return events;
     },
     createEvent: async (args) => {
+      const { errors, isValid } = ValidateEventInput(args.eventInput);
+      if (!isValid) {
+        // eslint-disable-next-line no-throw-literal
+        throw JSON.stringify(errors);
+      }
       const event = new Event({
         ...args.eventInput,
         date: new Date(args.eventInput.date),
@@ -79,7 +85,9 @@ app.use('/graphql', graphqlHttp({
       } catch (err) {
         // eslint-disable-next-line no-console
         console.log(err);
-        throw err;
+        errors.err = err.message;
+        // eslint-disable-next-line no-throw-literal
+        throw JSON.stringify(errors);
       }
       let user = null;
       try {
@@ -87,10 +95,14 @@ app.use('/graphql', graphqlHttp({
       } catch (err) {
         // eslint-disable-next-line no-console
         console.log(err);
-        throw err;
+        errors.err = err.message;
+        // eslint-disable-next-line no-throw-literal
+        throw JSON.stringify(errors);
       }
       if (!user) {
-        throw new Error('User not found.');
+        errors.err = 'User not found.';
+        // eslint-disable-next-line no-throw-literal
+        throw JSON.stringify(errors);
       }
       user.createdEvents.push(eventCreated);
       let userUpdated = null;
@@ -99,10 +111,14 @@ app.use('/graphql', graphqlHttp({
       } catch (err) {
         // eslint-disable-next-line no-console
         console.log(err);
-        throw err;
+        errors.err = err.message;
+        // eslint-disable-next-line no-throw-literal
+        throw JSON.stringify(errors);
       }
       if (!userUpdated) {
-        throw new Error('Event can\'t created.');
+        errors.err = 'Event can\'t created.';
+        // eslint-disable-next-line no-throw-literal
+        throw JSON.stringify(errors);
       }
       return eventCreated;
     },
@@ -153,6 +169,7 @@ mongoose.connect('mongodb://localhost:27017/event-booking-db',
   {
     useNewUrlParser: true,
     useFindAndModify: false,
+    useCreateIndex: true,
   })
   .then(() => {
     // eslint-disable-next-line no-console
