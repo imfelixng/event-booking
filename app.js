@@ -14,6 +14,35 @@ const app = express();
 
 app.use(bodyParser.json());
 
+const eventList = async (eventIDs) => {
+  let events = [];
+  try {
+    events = await Event.find({ _id: { $in: eventIDs } });
+  } catch (err) {
+    throw err;
+  }
+  return events.map(async event => ({
+    // eslint-disable-next-line no-underscore-dangle
+    ...event._doc,
+    // eslint-disable-next-line no-use-before-define
+    creator: await userItem(event.creator),
+  }));
+};
+
+const userItem = async (userID) => {
+  let user = null;
+  try {
+    user = await User.findById(userID);
+  } catch (err) {
+    throw err;
+  }
+  return {
+    // eslint-disable-next-line no-underscore-dangle
+    ...user._doc,
+    createdEvents: await eventList(user.createdEvents),
+  };
+};
+
 app.use('/graphql', graphqlHttp({
   schema: buildSchema(`
     type Event {
@@ -22,12 +51,14 @@ app.use('/graphql', graphqlHttp({
       description: String!
       price: Float!
       date: String!
+      creator: User!
     }
 
     type User {
       _id: ID!
       email: String!
       password: String!
+      createdEvents: [Event!]
     }
 
     input EventInput {
@@ -60,13 +91,16 @@ app.use('/graphql', graphqlHttp({
     events: async () => {
       let events = [];
       try {
-        events = await Event.find();
+        events = await Event.find().populate('creator');
       } catch (err) {
-        // eslint-disable-next-line no-console
-        console.log(err);
         throw err;
       }
-      return events;
+      return events.map(async event => (
+        {
+          // eslint-disable-next-line no-underscore-dangle
+          ...event._doc,
+          creator: await userItem(event.creator),
+        }));
     },
     createEvent: async (args) => {
       const { errors, isValid } = ValidateEventInput(args.eventInput);
@@ -83,8 +117,6 @@ app.use('/graphql', graphqlHttp({
       try {
         eventCreated = await event.save();
       } catch (err) {
-        // eslint-disable-next-line no-console
-        console.log(err);
         errors.err = err.message;
         // eslint-disable-next-line no-throw-literal
         throw JSON.stringify(errors);
@@ -93,8 +125,6 @@ app.use('/graphql', graphqlHttp({
       try {
         user = await User.findById('5c3f7b7bbf8d1d815c0b6cf2');
       } catch (err) {
-        // eslint-disable-next-line no-console
-        console.log(err);
         errors.err = err.message;
         // eslint-disable-next-line no-throw-literal
         throw JSON.stringify(errors);
@@ -109,8 +139,6 @@ app.use('/graphql', graphqlHttp({
       try {
         userUpdated = await user.save();
       } catch (err) {
-        // eslint-disable-next-line no-console
-        console.log(err);
         errors.err = err.message;
         // eslint-disable-next-line no-throw-literal
         throw JSON.stringify(errors);
@@ -127,8 +155,6 @@ app.use('/graphql', graphqlHttp({
       try {
         userExisted = await User.findOne({ email: args.userInput.email });
       } catch (err) {
-        // eslint-disable-next-line no-console
-        console.log(err);
         throw err;
       }
       if (userExisted) {
@@ -139,8 +165,6 @@ app.use('/graphql', graphqlHttp({
       try {
         hashedPassword = await bcrypt.hash(args.userInput.password, 12);
       } catch (err) {
-        // eslint-disable-next-line no-console
-        console.log(err);
         throw err;
       }
       const user = new User({
@@ -151,8 +175,6 @@ app.use('/graphql', graphqlHttp({
       try {
         userCreated = await user.save();
       } catch (err) {
-        // eslint-disable-next-line no-console
-        console.log(err);
         throw err;
       }
       return {
