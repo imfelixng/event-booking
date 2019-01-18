@@ -4,6 +4,7 @@ const bcrypt = require('bcryptjs');
 const Event = require('../../models/event');
 // eslint-disable-next-line import/no-unresolved
 const User = require('../../models/user');
+const Booking = require('../../models/booking');
 
 // eslint-disable-next-line import/no-unresolved
 const ValidateEventInput = require('../../validate/event');
@@ -24,6 +25,21 @@ const eventList = async (eventIDs) => {
   }));
 };
 
+const singleEvent = async (eventID) => {
+  let eventItem = null;
+  try {
+    eventItem = await Event.findById(eventID);
+  } catch (err) {
+    throw err;
+  }
+  return {
+    // eslint-disable-next-line no-underscore-dangle
+    ...eventItem._doc,
+    // eslint-disable-next-line no-use-before-define
+    creator: userItem.bind(this, eventItem.creator),
+  };
+};
+
 const userItem = async (userID) => {
   let user = null;
   try {
@@ -37,6 +53,7 @@ const userItem = async (userID) => {
     createdEvents: await eventList.bind(this, user.createdEvents),
   };
 };
+
 module.exports = {
   events: async () => {
     let events = [];
@@ -52,6 +69,24 @@ module.exports = {
         creator: await userItem.bind(this, event.creator),
         date: new Date(event.date).toISOString(),
       }));
+  },
+  bookings: async () => {
+    let bookings = null;
+    try {
+      bookings = await Booking.find();
+    } catch (err) {
+      throw err;
+    }
+    return bookings.map(async booking => ({
+      // eslint-disable-next-line no-underscore-dangle
+      ...booking._doc,
+      event: singleEvent.bind(this, booking.event),
+      user: userItem.bind(this, booking.user),
+      // eslint-disable-next-line no-underscore-dangle
+      createdAt: new Date(booking._doc.createdAt).toISOString(),
+      // eslint-disable-next-line no-underscore-dangle
+      updatedAt: new Date(booking._doc.updatedAt).toISOString(),
+    }));
   },
   createEvent: async (args) => {
     const { errors, isValid } = ValidateEventInput(args.eventInput);
@@ -136,6 +171,59 @@ module.exports = {
       _id: userCreated.id,
       email: userCreated.email,
       password: 'null',
+    };
+  },
+  bookEvent: async (args) => {
+    let fetchedEvent = null;
+    try {
+      fetchedEvent = await Event.findById(args.eventID);
+    } catch (err) {
+      throw err;
+    }
+    const booking = new Booking({
+      user: '5c3f7b7bbf8d1d815c0b6cf2',
+      event: fetchedEvent,
+    });
+
+    let bookingCreated = null;
+    try {
+      bookingCreated = await booking.save();
+    } catch (err) {
+      throw err;
+    }
+
+    return {
+      // eslint-disable-next-line no-underscore-dangle
+      ...bookingCreated._doc,
+      event: singleEvent.bind(this, bookingCreated.event),
+      user: userItem.bind(this, bookingCreated.user),
+      // eslint-disable-next-line no-underscore-dangle
+      createdAt: new Date(bookingCreated._doc.createdAt).toISOString(),
+      // eslint-disable-next-line no-underscore-dangle
+      updatedAt: new Date(bookingCreated._doc.updatedAt).toISOString(),
+    };
+  },
+  cancelBooking: async (args) => {
+    let bookingItem = null;
+    try {
+      bookingItem = await Booking.findById(args.bookingID).populate('event');
+    } catch (err) {
+      throw err;
+    }
+    if (!bookingItem) {
+      throw new Error('Booking not found.');
+    }
+    try {
+      // eslint-disable-next-line no-underscore-dangle
+      await Booking.findOneAndDelete(args.bookingID);
+    } catch (err) {
+      throw err;
+    }
+    return {
+      // eslint-disable-next-line no-underscore-dangle
+      ...bookingItem._doc.event._doc,
+      // eslint-disable-next-line no-underscore-dangle
+      creator: await userItem.bind(this, bookingItem._doc.user),
     };
   },
 };
