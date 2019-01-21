@@ -19,7 +19,10 @@ module.exports = {
     }
     return events.map(event => transformEvent(event));
   },
-  createEvent: async (args) => {
+  createEvent: async (args, req) => {
+    if (!req.isAuth) {
+      throw new Error('Unauthenticated!');
+    }
     const { errors, isValid } = ValidateEventInput(args.eventInput);
     if (!isValid) {
       // eslint-disable-next-line no-throw-literal
@@ -28,7 +31,7 @@ module.exports = {
     const event = new Event({
       ...args.eventInput,
       date: dateToString(args.eventInput.date),
-      creator: '5c3f7b7bbf8d1d815c0b6cf2',
+      creator: req.userID,
     });
     let eventCreated = null;
     try {
@@ -40,7 +43,7 @@ module.exports = {
     }
     let user = null;
     try {
-      user = await User.findById('5c3f7b7bbf8d1d815c0b6cf2');
+      user = await User.findById(req.userID);
     } catch (err) {
       errors.err = err.message;
       // eslint-disable-next-line no-throw-literal
