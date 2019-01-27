@@ -5,7 +5,8 @@ class Auth extends Component {
 
   state = {
     email: "",
-    password: ""
+    password: "",
+    isLogin: true,
   }
 
   onHandleChange = (e) => {
@@ -23,8 +24,62 @@ class Auth extends Component {
       alert("Please enter email and password!")
       return;
     }
-    
-    console.log(email, password);
+
+    const reqBody = {
+      query: this.state.isLogin ?
+      `
+        query {
+          login(email: "${email}", password: "${password}") {
+            userID
+            token
+            tokenExpriration
+          }
+        }
+      `
+      :
+      `
+        mutation {
+          createUser(userInput: {email: "${email}", password: "${password}"}) {
+            _id
+            email
+          }
+        }
+      `
+    }
+
+    fetch('http://localhost:5000/graphql', {
+      method: 'POST',
+      body: JSON.stringify(reqBody),
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    }
+    )
+      .then(res => {
+        if (res.status !== 200 && res.status !== 201) {
+          throw new Error("Failed");
+        }
+        return res.json();
+      })
+      .then(data => {
+        console.log(data);
+        this.setState({
+          email: "",
+          password: ""
+        });
+      })
+      .catch(err => {
+        console.log(err);
+      });
+    return;
+  }
+
+  onSwitchAuth = () => {
+    this.setState(prevState => {
+      return {
+        isLogin: !prevState.isLogin
+      }
+    });
   }
 
   render() {
@@ -55,12 +110,13 @@ class Auth extends Component {
             <button
               type = "submit"
             >
-              Sign In
+              {this.state.isLogin ? "Sign In" : "Sign Up"}
             </button>
             <button
               type = "button"
+              onClick = {this.onSwitchAuth}
             >
-              Switch to Sign Up
+              Switch to {this.state.isLogin ? "Sign In" : "Sign Up"}
             </button>
           </div>
         </form>

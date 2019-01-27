@@ -1,4 +1,3 @@
-// eslint-disable-next-line import/no-unresolved
 const Event = require('../../models/event');
 const Booking = require('../../models/booking');
 
@@ -54,12 +53,10 @@ module.exports = {
       throw new Error('Booking not found.');
     }
     try {
-      // eslint-disable-next-line no-underscore-dangle
       await Booking.findOneAndDelete(args.bookingID);
     } catch (err) {
       throw err;
     }
-    // eslint-disable-next-line no-underscore-dangle
     return transformEvent(bookingItem._doc.event);
   },
 };
