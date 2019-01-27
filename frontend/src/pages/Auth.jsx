@@ -70,12 +70,12 @@ class Auth extends Component {
           let { userID, token, tokenExpriration } = data.data.login;
           if(token) {
             this.context.login(token, userID, tokenExpriration);
+            this.setState({
+              email: "",
+              password: ""
+            });
           }
         }
-        this.setState({
-          email: "",
-          password: ""
-        });
       })
       .catch(err => {
         console.log(err);

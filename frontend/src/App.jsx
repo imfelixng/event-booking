@@ -44,13 +44,7 @@ class App extends Component {
             <main className = "main-content">
               <Switch>
                 {
-                  !this.state.token && <Redirect from = "/" to = "/auth" exact/>
-                }
-                {
                   this.state.token && <Redirect from = "/auth" to = "/events" exact/>
-                }
-                {
-                  !this.state.token && <Redirect from = "/bookings" to = "/auth" exact/>
                 }
                 {
                   !this.state.token && <Route path = "/auth" exact component = {Auth} />
@@ -58,6 +52,9 @@ class App extends Component {
                 <Route path = "/events" exact component = {Events} />
                 {
                   this.state.token && <Route path = "/bookings" exact component = {Bookings} />
+                }
+                {
+                  !this.state.token && <Redirect to = "/auth" exact/>
                 }
               </Switch>
             </main>

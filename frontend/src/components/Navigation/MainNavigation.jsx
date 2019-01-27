@@ -35,6 +35,9 @@ const MainNavigation = props => (
                         Bookings
                       </NavLink>
                     </li>
+                    <li>
+                      <span onClick = {context.logout}>Log out</span>
+                    </li>
                   </React.Fragment>
                 }
               </ul>

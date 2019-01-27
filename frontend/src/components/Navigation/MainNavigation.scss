@@ -38,6 +38,14 @@
             color: #e6e617;
           }
         }
+
+        span {
+          cursor: pointer;
+
+          &:hover {
+            color: #e6e617;
+          }
+        }
       }
     }
   }
