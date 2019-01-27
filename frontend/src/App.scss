@@ -18,3 +18,43 @@
     background-color: #13b1b1;
   }
 }
+
+.form-control {
+  margin-bottom: 1rem;
+
+  label, input, textarea {
+    width: 100%;
+    display: block;
+  }
+
+  label {
+    margin-bottom: 5px;
+  }
+
+  input {
+    height: 2rem;
+    font-size: 1rem;
+    outline: none;
+  }
+
+}
+
+.form-actions {
+
+  button {
+    background: #01d1d1;
+    font: inherit;
+    border-radius: 5px;
+    padding: 10px;
+    border: none;
+    outline: none;
+    margin-right: 10px;
+    color: #fff;
+    box-shadow: 1px 1px 1px 1px rgba(#000000, 0.1);
+    cursor: pointer;
+
+    &:hover, &:active {
+      background-color: #13b1b1;
+    }
+  }
+}
