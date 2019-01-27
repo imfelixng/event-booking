@@ -1,0 +1,45 @@
+.modal {
+  width: 90%;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0, 0.26);
+  position: fixed;
+  top: 20vh;
+  left: 5%;
+  z-index: 10;
+  transition: 0.5s;
+
+  &__header {
+    padding: 1rem;
+    background-color: #5101d1;
+    color: #fff;
+
+    h1 {
+      margin: 0;
+      font-size: 1.25rem;
+    }
+  }
+
+  &__content {
+    padding: 1rem;
+  }
+
+  &__actions {
+    display: flex;
+    justify-content: flex-end;
+    padding: 1rem;
+  }
+  @media (min-width: 768px) {
+    width: 50rem;
+    left: calc((100% - 50rem)/2);
+  }
+
+}
+
+.btn {
+  &--red {
+    background-color: #b81919;
+  }
+  &--green {
+    background-color: rgb(4, 170, 54);
+  }
+}

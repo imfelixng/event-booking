@@ -1,3 +1,20 @@
 .main-content {
   margin: 4rem 2.5rem;
 }
+
+.btn {
+  background: #01d1d1;
+  font: inherit;
+  border-radius: 5px;
+  padding: 10px;
+  border: none;
+  outline: none;
+  margin-right: 10px;
+  color: #fff;
+  box-shadow: 1px 1px 1px 1px rgba(#000000, 0.1);
+  cursor: pointer;
+
+  &:hover, &:active {
+    background-color: #13b1b1;
+  }
+}
