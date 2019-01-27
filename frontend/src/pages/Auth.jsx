@@ -1,6 +1,8 @@
 import React, { Component } from 'react'
 import './Auth.scss';
 
+import AuthContext from '../contexts/auth-context';
+
 class Auth extends Component {
 
   state = {
@@ -8,6 +10,8 @@ class Auth extends Component {
     password: "",
     isLogin: true,
   }
+
+  static contextType = AuthContext;
 
   onHandleChange = (e) => {
     let {name, value} = e.target;
@@ -62,7 +66,12 @@ class Auth extends Component {
         return res.json();
       })
       .then(data => {
-        console.log(data);
+        if(this.state.isLogin) {
+          let { userID, token, tokenExpriration } = data.data.login;
+          if(token) {
+            this.context.login(token, userID, tokenExpriration);
+          }
+        }
         this.setState({
           email: "",
           password: ""
