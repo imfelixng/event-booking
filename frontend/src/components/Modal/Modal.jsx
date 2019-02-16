@@ -7,7 +7,7 @@ const modal = (props) => {
       <div className = "modal">
         <header className = "modal__header">{props.title}</header>
         <section className = "modal__content">
-          <h1>{props.children}</h1>
+          {props.children}
         </section>
         <section className = "modal__actions">
           {props.canCancel && <button className = "btn btn--red" onClick = {props.onCloseModal}>Cancel</button>}

@@ -20,10 +20,16 @@ class Events extends Component {
     selectedEvent: null,
   }
 
+  isActive = true;
+
   static contextType = AuthContext;
 
   componentDidMount() {
     this.fetchEvents();
+  }
+
+  componentWillUnmount() {
+    this.isActive = false;
   }
 
   onShowModal = () => {
@@ -83,20 +89,22 @@ class Events extends Component {
         return res.json();
       })
       .then(data => {
-        this.setState(prevState => {
-          let eventCreated = {
-            _id: data.data.createEvent._id,
-            title: data.data.createEvent.title,
-            description: data.data.createEvent.description,
-            date: data.data.createEvent.date,
-            creator: {
-              _id: this.context.userID,
+        if (this.isActive) {
+          this.setState(prevState => {
+            let eventCreated = {
+              _id: data.data.createEvent._id,
+              title: data.data.createEvent.title,
+              description: data.data.createEvent.description,
+              date: data.data.createEvent.date,
+              creator: {
+                _id: this.context.userID,
+              }
             }
-          }
-          return {
-            events: [eventCreated,...prevState.events]
-          }
-        })
+            return {
+              events: [eventCreated,...prevState.events]
+            }
+          });
+        }
       })
       .catch(err => {
         console.log(err);
@@ -111,10 +119,66 @@ class Events extends Component {
   }
 
   onBookEvent  = () => {
+    if (!this.context.token) {
+      alert("Please login to continue!");
+      this.setState({
+        isShowModal: false,
+        selectedEvent: null
+      }, () => this.props.history.push('/auth'));
+      return;
+    }
+    const reqBody = {
+      query:
+      `
+        mutation {
+          bookEvent(eventID: "${this.state.selectedEvent._id}") {
+            _id
+            event {
+              _id
+              title
+              description
+              date
+              price
+              creator {
+                _id
+                email
+              }
+            }
+            user {
+              _id
+              email
+            }
+            createdAt
+            updatedAt
+          }
+        }
+      `
+    }
+
+    fetch("http://localhost:5000/graphql", {
+      method: "POST",
+      body: JSON.stringify(reqBody),
+      headers: {
+        "Content-Type": "application/json",
+        'Authorization': 'Bearer ' + this.context.token,
+      }
+    })
+    .then(res => {
+      if (res.status !== 200 && res.status !== 201) {
+        throw new Error("Failed");
+      }
+      return res.json();
+    })
+    .then(data => {
+      console.log(data);
+    })
+    .catch(err => {
+      console.log(err);
+    });
     this.setState({
       isShowModal: false,
       selectedEvent: null,
-    })
+    });
   }
 
   fetchEvents = () => {
@@ -237,7 +301,7 @@ class Events extends Component {
             canConfirm
             onCloseModal = {this.onCloseModal}
             onConfirm = {this.onBookEvent}
-            confirmText = "Book Event"
+            confirmText = {this.context.token ? "Book Event" : "Login"}
           >
             <h1>{this.state.selectedEvent.title}</h1>
             <h2>${this.state.selectedEvent.price} - {new Date(this.state.selectedEvent.date).toLocaleDateString()}</h2>

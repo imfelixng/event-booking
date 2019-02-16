@@ -11,7 +11,13 @@ class Auth extends Component {
     isLogin: true,
   }
 
+  isActive = true;
+
   static contextType = AuthContext;
+
+  componentWillUnmount() {
+    this.isActive = false;
+  }
 
   onHandleChange = (e) => {
     let {name, value} = e.target;
@@ -70,10 +76,12 @@ class Auth extends Component {
           let { userID, token, tokenExpriration } = data.data.login;
           if(token) {
             this.context.login(token, userID, tokenExpriration);
-            this.setState({
-              email: "",
-              password: ""
-            });
+            if (this.isActive) {
+              this.setState({
+                email: "",
+                password: ""
+              });
+            }
           }
         }
       })
