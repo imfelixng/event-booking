@@ -10,7 +10,7 @@ module.exports = {
     }
     let bookings = null;
     try {
-      bookings = await Booking.find();
+      bookings = await Booking.find({user: req.userID});
     } catch (err) {
       throw err;
     }
@@ -20,6 +20,7 @@ module.exports = {
     if (!req.isAuth) {
       throw new Error('Unauthenticated!');
     }
+
     let fetchedEvent = null;
     try {
       fetchedEvent = await Event.findById(args.eventID);

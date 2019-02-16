@@ -1,0 +1,10 @@
+.btn {
+
+  &--red {
+    background: #960606;
+
+    &:hover {
+      background: #d20707;
+    }
+  }
+}
