@@ -182,6 +182,7 @@ class Events extends Component {
             canConfirm
             onCloseModal = {this.onCloseModal}
             onConfirm = {this.onAddEvent}
+            confirmText = "Add Event"
           >
             <form>
               <div className = "form-control">
@@ -227,6 +228,7 @@ class Events extends Component {
           </Modal>
         }
         {this.state.isShowModal && <Backdrop />}
+        {this.state.selectedEvent && <Backdrop />}
         {
           this.state.selectedEvent && 
           <Modal
@@ -235,6 +237,7 @@ class Events extends Component {
             canConfirm
             onCloseModal = {this.onCloseModal}
             onConfirm = {this.onBookEvent}
+            confirmText = "Book Event"
           >
             <h1>{this.state.selectedEvent.title}</h1>
             <h2>${this.state.selectedEvent.price} - {new Date(this.state.selectedEvent.date).toLocaleDateString()}</h2>

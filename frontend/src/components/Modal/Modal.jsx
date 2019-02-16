@@ -11,7 +11,7 @@ const modal = (props) => {
         </section>
         <section className = "modal__actions">
           {props.canCancel && <button className = "btn btn--red" onClick = {props.onCloseModal}>Cancel</button>}
-          {props.canConfirm && <button className = "btn btn--green" onClick = {props.onConfirm}> Confirm</button>}
+          {props.canConfirm && <button className = "btn btn--green" onClick = {props.onConfirm}> {props.confirmText}</button>}
         </section>
       </div>
     </React.Fragment>
